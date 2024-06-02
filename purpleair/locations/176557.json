@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870493,
+  "data_time_stamp" : 1716870448,
+  "sensor" : {
+    "sensor_index" : 176557,
+    "name" : "CFD Station 12",
+    "latitude" : 39.13587,
+    "longitude" : -84.54109
+  }
+}

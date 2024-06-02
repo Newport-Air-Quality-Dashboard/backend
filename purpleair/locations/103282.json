@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870485,
+  "data_time_stamp" : 1716870447,
+  "sensor" : {
+    "sensor_index" : 103282,
+    "name" : "Carolina pines",
+    "latitude" : 39.27464,
+    "longitude" : -84.79335
+  }
+}

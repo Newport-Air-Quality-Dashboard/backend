@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870493,
+  "data_time_stamp" : 1716870440,
+  "sensor" : {
+    "sensor_index" : 184707,
+    "name" : "City-CHD",
+    "latitude" : 39.135433,
+    "longitude" : -84.50162
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870445,
+  "data_time_stamp" : 1716870389,
+  "sensor" : {
+    "sensor_index" : 184799,
+    "name" : "338 E 9th St Newport KY 41071",
+    "latitude" : 39.0902,
+    "longitude" : -84.48639
+  }
+}

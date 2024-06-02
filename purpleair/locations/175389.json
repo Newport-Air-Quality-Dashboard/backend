@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870489,
+  "data_time_stamp" : 1716870440,
+  "sensor" : {
+    "sensor_index" : 175389,
+    "name" : "Columbia Tusculum",
+    "latitude" : 39.119144,
+    "longitude" : -84.44059
+  }
+}

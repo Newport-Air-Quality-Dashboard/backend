@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870484,
+  "data_time_stamp" : 1716870423,
+  "sensor" : {
+    "sensor_index" : 90915,
+    "name" : "WWAQ",
+    "latitude" : 39.43927,
+    "longitude" : -83.89511
+  }
+}

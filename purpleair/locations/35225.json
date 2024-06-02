@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870489,
+  "data_time_stamp" : 1716870440,
+  "sensor" : {
+    "sensor_index" : 35225,
+    "name" : "Mt. Washington",
+    "latitude" : 39.08473,
+    "longitude" : -84.386696
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870491,
+  "data_time_stamp" : 1716870444,
+  "sensor" : {
+    "sensor_index" : 175263,
+    "name" : "Lee Street",
+    "latitude" : 39.075745,
+    "longitude" : -84.51495
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870489,
+  "data_time_stamp" : 1716870447,
+  "sensor" : {
+    "sensor_index" : 218157,
+    "name" : "Norwood-D",
+    "latitude" : 39.15582,
+    "longitude" : -84.46107
+  }
+}

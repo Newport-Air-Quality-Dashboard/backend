@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870492,
+  "data_time_stamp" : 1716870444,
+  "sensor" : {
+    "sensor_index" : 188039,
+    "name" : "McFarland",
+    "latitude" : 39.098476,
+    "longitude" : -84.51862
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870485,
+  "data_time_stamp" : 1716870447,
+  "sensor" : {
+    "sensor_index" : 188555,
+    "name" : "Milford Township",
+    "latitude" : 39.51597,
+    "longitude" : -84.61042
+  }
+}

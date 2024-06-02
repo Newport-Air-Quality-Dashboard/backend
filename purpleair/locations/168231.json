@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870487,
+  "data_time_stamp" : 1716870447,
+  "sensor" : {
+    "sensor_index" : 168231,
+    "name" : "Lost Boulder Farm",
+    "latitude" : 38.84417,
+    "longitude" : -84.739075
+  }
+}

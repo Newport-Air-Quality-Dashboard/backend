@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870490,
+  "data_time_stamp" : 1716870447,
+  "sensor" : {
+    "sensor_index" : 168209,
+    "name" : "Park Hills",
+    "latitude" : 39.068443,
+    "longitude" : -84.53976
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870486,
+  "data_time_stamp" : 1716870447,
+  "sensor" : {
+    "sensor_index" : 111898,
+    "name" : "Bridgetown Sanctuary",
+    "latitude" : 39.17289,
+    "longitude" : -84.71818
+  }
+}

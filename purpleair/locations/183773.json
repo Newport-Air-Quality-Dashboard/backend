@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870490,
+  "data_time_stamp" : 1716870471,
+  "sensor" : {
+    "sensor_index" : 183773,
+    "name" : "AV-14-987",
+    "latitude" : 39.044727,
+    "longitude" : -84.513336
+  }
+}

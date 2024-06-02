@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870438,
+  "data_time_stamp" : 1716870410,
+  "sensor" : {
+    "sensor_index" : 184723,
+    "name" : "Monitor 1 East",
+    "latitude" : 39.094616,
+    "longitude" : -84.48508
+  }
+}

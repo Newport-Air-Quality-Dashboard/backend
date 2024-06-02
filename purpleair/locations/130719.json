@@ -1,0 +1,11 @@
+{
+  "api_version" : "V1.0.13-0.0.57",
+  "time_stamp" : 1716870489,
+  "data_time_stamp" : 1716870440,
+  "sensor" : {
+    "sensor_index" : 130719,
+    "name" : "NKU KY DAQ",
+    "latitude" : 39.021954,
+    "longitude" : -84.47444
+  }
+}
