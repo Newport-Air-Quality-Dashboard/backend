@@ -16,7 +16,8 @@ epa_data <- epa_list %>% reduce(full_join, by=c('time_stamp', 'sensor_index'))
 rm(pm2.5, pm10, ozone, co, no2, so2)
 
 epa_data$time_stamp <- as.POSIXct(epa_data$time_stamp, 
-                           format = "%Y-%m-%dT%H:%M") 
+                                 format = "%Y-%m-%dT%H:%M",
+                                 tz="UTC") 
 epa_data$sensor_index <- as.character(epa_data$sensor_index)
 
 epa_data$source <- "EPA"
@@ -27,8 +28,8 @@ save(epa_data, file="./out/epa_complete.Rda")
 
 
 # PurpleAir Data
-path_to_PurpleAir_data='./purpleair_sorted.csv'
-path_to_PurpleAir_sensor_data='./purpleair_sensors.csv'
+path_to_PurpleAir_data='./csv/purpleair.csv'
+path_to_PurpleAir_sensor_data='./csv/purpleair_sensors.csv'
 
 purpleair_data <- read.csv(path_to_PurpleAir_data)
 purpleair_sensor_data <- read.csv(path_to_PurpleAir_sensor_data)
@@ -38,7 +39,8 @@ purpleair_data <- list(purpleair_data, purpleair_sensor_data) %>% reduce(full_jo
 rm(purpleair_sensor_data)
 
 purpleair_data$time_stamp <- as.POSIXct(purpleair_data$time_stamp, 
-                           format = "%s") 
+                                       format = "%s",
+                                       tz = "UTC") 
 purpleair_data$sensor_index <- as.character(purpleair_data$sensor_index)
 
 purpleair_data$source <- "PurpleAir"
