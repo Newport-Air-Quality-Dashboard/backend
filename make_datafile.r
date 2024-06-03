@@ -58,5 +58,6 @@ combined_data <- list(purpleair_data, epa_data) %>% reduce(full_join, by=c('sens
 
 str(combined_data)
 
-save(purpleair_data, file="./out/combined_complete.Rda")
+save(combined_data, file="./out/combined_complete.Rda")
+
 
