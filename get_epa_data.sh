@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-
+#
 # Description: This script uses curl to pull epa data for the region bounded in the BBOX variable and puts it into csv files in the location defined in epa_dir
-
+#
 # API documentation: https://docs.airnowapi.org/Data/docs
 
 API_KEY="" # Valid airnow API key goes here
