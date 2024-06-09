@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 library(dlpyr)
 library(httr)
 library(tidyverse)
