@@ -145,6 +145,7 @@ selng <- -83.023682
 selat <- 39.825413
 
 input_df="./out/combined_complete.Rda"
+output_df="./out/combined_realtime.Rda"
 
 epa_key <- "32D19AAC-567C-440E-8138-5EF7FDBD2DD0"
 
@@ -156,7 +157,7 @@ load(input_df)
 epa_time <- 0
 while (T) {
   print("grabbing PurpleAir data")
-  PA_data <- get_PA_data(-84.534, 39.106, -84.455, 39.050, location, api_key)
+  PA_data <- get_PA_data(-84.534, 39.106, -84.455, 39.050, location, api_key= pa_key)
   print("transforming PurpleAir data")
   PA_data <- transform_purpleair(PA_data)
   
