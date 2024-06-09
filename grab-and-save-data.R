@@ -169,9 +169,8 @@ while (T) {
     EPA_data <- transform_epa(EPA_data) 
     
     print("joining PurpleAir and EPA data")
-    new_data <- list(PA_test, EPA_test) %>% reduce(full_join, by=c('sensor_index', 'time_stamp', 'latitude',
-                                                                               'longitude', 'name', 'source'))
-    
+    new_data <- list(PA_data, EPA_data) %>% reduce(full_join, by=c('sensor_index', 'time_stamp', 'latitude',
+                                                                   'longitude', 'name', 'source'))
     epa_time <- 0
   } else {
     new_data <- PA_data
