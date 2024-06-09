@@ -1,11 +1,11 @@
-library(dlpyr)
+#!/usr/bin/env Rscript
+# install.packages(c("httr", "jsonlite", "tidyverse"))
+
 library(httr)
-library(tidyverse)
 library(jsonlite)
+library(tidyverse)
 
 # Define the API key
-api_key <- "A8549CEC-0E06-11EF-B9F7-42010A80000D"
-
 get_EPA_data <- function(nwlng, nwlat,  selng, selat,
                          data_type = "B", monitor_type = "2", verbose = "1",
                          parameters = c("OZONE", "PM25", "PM10", "CO", "NO2", "SO2"),
@@ -40,13 +40,21 @@ get_EPA_data <- function(nwlng, nwlat,  selng, selat,
   if (status_code(response) == 200) {
     df <- content(response, as = "parsed")
     
-    df[12] <- NULL 
-    
     colnames(df) <- c("latitude", "longitude", "time_stamp", "parameter", 
-                          "concentration", "unit", "raw concentration", "aqi", 
-                          "category", "name", "agency", "sensor_index")
+                          "concentration", "unit", "raw_concentration", "aqi", 
+                          "category", "name", "agency", "aqs_id", "sensor_index")
     
-    df <- df %>% pivot_wider(names_from=parameter, values_from=c(concentration, aqi, category, "raw concentration")) 
+  } else {
+    stop("API request failed")
+  }
+  return (df)
+}
+
+transform_epa <- function(df) {
+  
+    df$aqs_id <- NULL 
+    
+    df <- df %>% pivot_wider(names_from=parameter, values_from=c(concentration, aqi, category, raw_concentration, unit)) 
   
     df <- df %>% rename(pm2.5_aqi = aqi_PM2.5,
                         no2_aqi = aqi_NO2,
@@ -60,18 +68,24 @@ get_EPA_data <- function(nwlng, nwlat,  selng, selat,
                         ozone_category = category_OZONE,
                         pm10.0_category = category_PM10,
                         so2_category = category_SO2,
+                        pm2.5_unit = unit_PM2.5, 
+                        no2_unit = unit_NO2,
+                        co_unit = unit_CO,
+                        ozone_unit = unit_OZONE,
+                        pm10.0_unit = unit_PM10,
+                        so2_unit = unit_SO2,
                         pm2.5_60minute = concentration_PM2.5, 
                         no2_60minute = concentration_NO2,
                         co_60minute = concentration_CO,
                         ozone_60minute = concentration_OZONE,
                         pm10.0_60minute = concentration_PM10,
                         so2_60minute = concentration_SO2,
-                        pm2.5_atm = "raw concentration_PM2.5", 
-                        no2_atm = "raw concentration_NO2",
-                        co_atm = "raw concentration_CO",
-                        ozone_atm = "raw concentration_OZONE",
-                        pm10.0_atm = "raw concentration_PM10",
-                        so2_atm = "raw concentration_SO2")
+                        pm2.5_atm = raw_concentration_PM2.5, 
+                        no2_atm = raw_concentration_NO2,
+                        co_atm = raw_concentration_CO,
+                        ozone_atm = raw_concentration_OZONE,
+                        pm10.0_atm = raw_concentration_PM10,
+                        so2_atm = raw_concentration_SO2)
     
     df[, c('no2_60minute', 'co_60minute', 'so2_60minute')] <- list(NULL)
     
@@ -79,10 +93,8 @@ get_EPA_data <- function(nwlng, nwlat,  selng, selat,
                                 format = "%Y-%m-%dT%H:%M", tz="UTC") 
     df$sensor_index <- as.character(df$sensor_index)
     df$source <- "EPA"
-  } else {
-    stop("API request failed")
-  }
-  return (df)
+    
+    return(df)
 }
 
 
@@ -99,7 +111,7 @@ get_PA_data <- function(nwlng, nwlat, selng, selat, location, api_key) {
   fields_api_url <- paste0("&fields=", paste(fields_list, collapse = "%2C"))
   
   # Final API URL
-  api_url <- paste0(root_url, "?api_key=", key_read, fields_api_url, ll_api_url)
+  api_url <- paste0(root_url, "?api_key=", api_key, fields_api_url, ll_api_url)
   
   # Getting data
   response <- GET(api_url)
@@ -109,15 +121,6 @@ get_PA_data <- function(nwlng, nwlat, selng, selat, location, api_key) {
       fromJSON()
     df <- bind_cols(json_data$data)
     names(df) <- fields_list
-    
-    df <- df %>% rename(time_stamp = last_seen)
-    df$time_stamp <- as.POSIXct(df$time_stamp, 
-                                format = "%s",
-                                tz = "UTC") 
-    df$sensor_index <- as.character(df$sensor_index)
-    df$latitude <- as.numeric(df$latitude)
-    df$longitude <- as.numeric(df$longitude)
-    df$source <- "PurpleAir"
   } else {
     stop("API request failed")
   }
@@ -125,12 +128,15 @@ get_PA_data <- function(nwlng, nwlat, selng, selat, location, api_key) {
   return(df)
 }
 
-append_to_historical <- function(df, historical_file) {
-  if (!file.exists(historical_file)) {
-    write.csv(df, historical_file, row.names = FALSE)
-  } else {
-    write.table(df, historical_file, sep = ",", append = TRUE, col.names = !file.exists(historical_file), row.names = FALSE)
-  }
+transform_purpleair <- function(df) {
+  df <- df %>% rename(time_stamp = last_seen)
+  df$time_stamp <- as.POSIXct(df$time_stamp, 
+                              format = "%s",
+                              tz = "UTC") 
+  df$sensor_index <- as.character(df$sensor_index)
+  df$latitude <- as.numeric(df$latitude)
+  df$longitude <- as.numeric(df$longitude)
+  df$source <- "PurpleAir"
 }
 
 nwlng <- -85.825195 
@@ -138,22 +144,25 @@ nwlat <- 38.324420
 selng <- -83.023682
 selat <- 39.825413
 
-path_to_df="./out/combined_complete.rda"
+path_to_df="./out/combined_complete.Rda"
 
 epa_key <- "32D19AAC-567C-440E-8138-5EF7FDBD2DD0"
 
-pa_key <- "E42FE138-1633-11EF-B9F7-42010A80000D"
+pa_key <- "61DCB755-23B1-11EF-95CB-42010A80000E"
 location <- "both"
 
-load(file=path_to_df)
+load(path_to_df)
 
 epa_time <- 0
 while (T) {
   PA_data <- get_PA_data(-84.534, 39.106, -84.455, 39.050, location, api_key)
+  PA_data <- transform_purpleair(PA_data)
   
   if (epa_time %% 6 == 0) {
     EPA_data <- get_EPA_data(nwlng = nwlng, nwlat = nwlat, selng = selng, selat = selat,
                              api_key = epa_key)
+    EPA_data <- transform_epa(EPA_data) 
+    
     new_data <- list(PA_test, EPA_test) %>% reduce(full_join, by=c('sensor_index', 'time_stamp', 'latitude',
                                                                                'longitude', 'name', 'source'))
     
@@ -162,8 +171,10 @@ while (T) {
     new_data <- PA_data
   }
   
+  new_data$type <- "real-time"
+  
   combined_data <- bind_rows(combined_data, new_data)
-  save(file=path_to_df)
+  #save(file=path_to_df)
   
   epa_time <- epa_time + 1
   Sys.sleep(600000) # Sleep 10m
