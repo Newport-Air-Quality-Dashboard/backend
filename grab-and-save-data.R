@@ -144,25 +144,30 @@ nwlat <- 38.324420
 selng <- -83.023682
 selat <- 39.825413
 
-path_to_df="./out/combined_complete.Rda"
+input_df="./out/combined_complete.Rda"
 
 epa_key <- "32D19AAC-567C-440E-8138-5EF7FDBD2DD0"
 
 pa_key <- "61DCB755-23B1-11EF-95CB-42010A80000E"
 location <- "both"
 
-load(path_to_df)
+load(input_df)
 
 epa_time <- 0
 while (T) {
+  print("grabbing PurpleAir data")
   PA_data <- get_PA_data(-84.534, 39.106, -84.455, 39.050, location, api_key)
+  print("transforming PurpleAir data")
   PA_data <- transform_purpleair(PA_data)
   
   if (epa_time %% 6 == 0) {
+    print("grabbing EPA data")
     EPA_data <- get_EPA_data(nwlng = nwlng, nwlat = nwlat, selng = selng, selat = selat,
                              api_key = epa_key)
+    print("transforming EPA data")
     EPA_data <- transform_epa(EPA_data) 
     
+    print("joining PurpleAir and EPA data")
     new_data <- list(PA_test, EPA_test) %>% reduce(full_join, by=c('sensor_index', 'time_stamp', 'latitude',
                                                                                'longitude', 'name', 'source'))
     
@@ -173,8 +178,10 @@ while (T) {
   
   new_data$type <- "real-time"
   
+  print("merging real-time with historical data")
   combined_data <- bind_rows(combined_data, new_data)
-  #save(file=path_to_df)
+  print("saving data")
+  save(file=output_df)
   
   epa_time <- epa_time + 1
   Sys.sleep(600000) # Sleep 10m
