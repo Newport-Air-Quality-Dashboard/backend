@@ -5,6 +5,8 @@ library(httr)
 library(jsonlite)
 library(tidyverse)
 
+source("config.R")
+
 # Define the API key
 get_EPA_data <- function(nwlng, nwlat,  selng, selat,
                          data_type = "B", monitor_type = "2", verbose = "1",
@@ -146,10 +148,6 @@ selat <- 39.825413
 
 input_df="./out/combined_complete.Rda"
 output_df="./out/combined_realtime.Rda"
-
-epa_key <- "32D19AAC-567C-440E-8138-5EF7FDBD2DD0"
-
-pa_key <- "61DCB755-23B1-11EF-95CB-42010A80000E"
 location <- "both"
 
 load(input_df)
