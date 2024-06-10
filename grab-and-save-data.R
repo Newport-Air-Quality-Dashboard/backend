@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 # install.packages(c("httr", "jsonlite", "tidyverse"))
 
+library(con2aqi)
 library(httr)
 library(jsonlite)
 library(tidyverse)
@@ -109,7 +110,7 @@ get_PA_data <- function(nwlng, nwlat, selng, selat, location, api_key) {
   ll_api_url <- paste0("&nwlng=", lat_lon[1], "&nwlat=", lat_lon[2], "&selng=", lat_lon[3], "&selat=", lat_lon[4])
   
   # Fields to get
-  fields_list <- c("sensor_index", "last_seen", "name", "latitude", "longitude", "humidity", "temperature", "pressure", "pm1.0", "pm2.5", "pm2.5_10minute")
+  fields_list <- c("sensor_index", "last_seen", "name", "latitude", "longitude", "humidity", "temperature", "pressure", "pm1.0", "pm2.5", "pm2.5_10minute", "pm10.0_atm")
   fields_api_url <- paste0("&fields=", paste(fields_list, collapse = "%2C"))
   
   # Final API URL
@@ -139,6 +140,11 @@ transform_purpleair <- function(df) {
   df$latitude <- as.numeric(df$latitude)
   df$longitude <- as.numeric(df$longitude)
   df$source <- "PurpleAir"
+  
+  # df$pm2.5_aqi <- con2aqi("pm25", df$pm2.5_10minute)
+  # df$pm10.0_aqi <- con2aqi("pm10", df$pm10.0_atm)
+  
+  return(df)
 }
 
 nwlng <- -85.825195 
@@ -155,7 +161,7 @@ load(input_df)
 epa_time <- 0
 while (T) {
   print("grabbing PurpleAir data")
-  PA_data <- get_PA_data(-84.534, 39.106, -84.455, 39.050, location, api_key= pa_key)
+  PA_data <- get_PA_data(-84.534, 39.106, -84.455, 39.050, location, api_key=pa_key)
   print("transforming PurpleAir data")
   PA_data <- transform_purpleair(PA_data)
   
@@ -184,3 +190,7 @@ while (T) {
   epa_time <- epa_time + 1
   Sys.sleep(600000) # Sleep 10m
 }
+
+
+# purpleair_data$pm2.5_aqi <- con2aqi("pm25", purpleair_data$pm2.5_60minute)
+# purpleair_data$pm10.0_aqi <- con2aqi("pm10", purpleair_data$pm10.0_60minute)
