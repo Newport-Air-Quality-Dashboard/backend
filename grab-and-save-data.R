@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # install.packages(c("httr", "jsonlite", "tidyverse"))
 
-library(con2aqi)
+# library(con2aqi)
 library(httr)
 library(jsonlite)
 library(tidyverse)
@@ -138,7 +138,7 @@ transform_purpleair <- function(df) {
                               tz = "UTC") 
   df$sensor_index <- as.character(df$sensor_index)
   
-  df <- df %>% mutate_all(na_if,"null")
+  # is.na(df) <- df == "null"
   
   df <- df %>% mutate_at(c('latitude', 
                            'longitude',
@@ -202,9 +202,11 @@ while (T) {
   
   print("saving data")
   save(combined_data, file=output_df)
+
+  print("data saved. sleeping 10 minutes")
   
   epa_time <- epa_time + 1
-  Sys.sleep(600000) # Sleep 10m
+  Sys.sleep(600) # Sleep 10m
 }
 
 # purpleair_data$pm2.5_aqi <- con2aqi("pm25", purpleair_data$pm2.5_60minute)
