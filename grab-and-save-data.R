@@ -137,8 +137,20 @@ transform_purpleair <- function(df) {
                               format = "%s",
                               tz = "UTC") 
   df$sensor_index <- as.character(df$sensor_index)
-  df$latitude <- as.numeric(df$latitude)
-  df$longitude <- as.numeric(df$longitude)
+  
+  df <- df %>% mutate_all(na_if,"null")
+  
+  df <- df %>% mutate_at(c('latitude', 
+                           'longitude',
+                           'humidity',
+                           'temperature',
+                           'pressure',
+                           'pm1.0',
+                           'pm2.5',
+                           'pm2.5_10minute',
+                           'pm10.0_atm',
+                           'confidence'), as.numeric)  
+  
   df$source <- "PurpleAir"
   
   # df$pm2.5_aqi <- con2aqi("pm25", df$pm2.5_10minute)
@@ -158,7 +170,7 @@ location <- "both"
 
 load(input_df)
 
-epa_time <- 0
+epa_time <- 1
 while (T) {
   print("grabbing PurpleAir data")
   PA_data <- get_PA_data(-84.534, 39.106, -84.455, 39.050, location, api_key=pa_key)
@@ -175,7 +187,7 @@ while (T) {
     print("joining PurpleAir and EPA data")
     new_data <- list(PA_data, EPA_data) %>% reduce(full_join, by=c('sensor_index', 'time_stamp', 'latitude',
                                                                    'longitude', 'name', 'source'))
-    epa_time <- 0
+    epa_time <- 1
   } else {
     new_data <- PA_data
   }
@@ -184,13 +196,16 @@ while (T) {
   
   print("merging real-time with historical data")
   combined_data <- bind_rows(combined_data, new_data)
+  
+  print("removing duplicate rows")
+  combined_data <- combined_data %>% distinct()
+  
   print("saving data")
-  save(file=output_df)
+  save(combined_data, file=output_df)
   
   epa_time <- epa_time + 1
   Sys.sleep(600000) # Sleep 10m
 }
-
 
 # purpleair_data$pm2.5_aqi <- con2aqi("pm25", purpleair_data$pm2.5_60minute)
 # purpleair_data$pm10.0_aqi <- con2aqi("pm10", purpleair_data$pm10.0_60minute)
