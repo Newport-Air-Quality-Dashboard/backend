@@ -205,12 +205,13 @@ transform_pa <- function(df) {
   # co     - 50.4
   # so2    - 1004
   # no2    - 2049
-  df["pm2.5_atm"][df["pm2.5_atm"] > 500.4] <- NA
-  df["pm2.5_10minute"][df["pm2.5_10minute"] > 500.4] <- NA
-  df["pm10.0_atm"][df["pm10.0_atm"] > 604] <- NA
+  # df["pm2.5_atm"][df["pm2.5_atm"] > 500.4] <- NA
+  # df["pm2.5_10minute"][df["pm2.5_10minute"] > 500.4] <- NA
+  # df["pm10.0_atm"][df["pm10.0_atm"] > 604] <- NA
   
-  df$pm2.5_aqi <- con2aqi("pm25", df$pm2.5_10minute)
-  df$pm10.0_aqi <- con2aqi("pm10", df$pm10.0_atm)
+  # calculate aqi for pm2.5 and pm10.0
+  df[pm2.5_aqi][df[pm2.5_10minute] > 500.4] <- con2aqi("pm25", df[pm2.5_10minute][df[pm2.5_10minute] > 500.4])
+  df[pm10.0_aqi][df[pm10.0_10minute] > 604] <- con2aqi("pm25", df[pm10.0_10minute][df[pm10.0_10minute] > 604])
   
   df$source <- "PurpleAir"
   
@@ -271,3 +272,15 @@ while (T) {
   Sys.sleep(600) # Sleep 10m
 }
 
+  combined_data["pm2.5_atm"][combined_data["pm2.5_atm"] > 500.4] <- NA
+  combined_data["pm2.5_60minute"][combined_data["pm2.5_60minute"] > 500.4] <- NA
+  combined_data["pm10.0_60minute"][combined_data["pm10.0_60minute"] > 604] <- NA
+  
+  # calculate aqi for pm2.5 and pm10.0
+  combined_data$pm2.5_aqi <- con2aqi("pm25", combined_data$pm2.5_10minute)
+  combined_data$pm10.0_aqi <- con2aqi("pm10", combined_data$pm10.0_atm)
+  
+  test_df <- combined_data
+  
+  test_df[is.na(test_df$pm2.5_60minute), ] <- rowMeans(test_df[is.na(test_df$pm2.5_60minute), c("pm2.5_60minute_a", "pm2.5_60minute_b")], na.rm=T)
+  
