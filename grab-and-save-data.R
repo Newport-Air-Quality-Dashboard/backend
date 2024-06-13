@@ -205,12 +205,12 @@ transform_pa <- function(df) {
   # co     - 50.4
   # so2    - 1004
   # no2    - 2049
-  # df["pm2.5_atm"][df["pm2.5_atm" > 500.4]] <- NA
-  # df["pm2.5_10minute"][df["pm2.5_10minute" > 500.4]] <- NA
-  # df["pm10.0"][df["pm10.0" > 604]] <- NA
-  # 
-  # df$pm2.5_aqi <- con2aqi("pm25", df$pm2.5_10minute)
-  # df$pm10.0_aqi <- con2aqi("pm10", df$pm10.0_atm)
+  df["pm2.5_atm"][df["pm2.5_atm"] > 500.4] <- NA
+  df["pm2.5_10minute"][df["pm2.5_10minute"] > 500.4] <- NA
+  df["pm10.0_atm"][df["pm10.0_atm"] > 604] <- NA
+  
+  df$pm2.5_aqi <- con2aqi("pm25", df$pm2.5_10minute)
+  df$pm10.0_aqi <- con2aqi("pm10", df$pm10.0_atm)
   
   df$source <- "PurpleAir"
   
