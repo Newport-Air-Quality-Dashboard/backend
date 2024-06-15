@@ -147,7 +147,7 @@ get_pa <- function(nwlng, nwlat, selng, selat, location, api_key) {
                    "humidity_a", "humidity_b", 
                    "temperature_a", "temperature_b",
                    "pressure_a", "pressure_b",
-                   "pm1.0_a", "pm1.0_b",
+                   "pm1.0_atm_a", "pm1.0_atm_b",
                    "pm2.5_atm_a", "pm2.5_atm_b",
                    "pm2.5_10minute_a", "pm2.5_10minute_b",
                    "pm10.0_atm_a", "pm10.0_atm_b",
