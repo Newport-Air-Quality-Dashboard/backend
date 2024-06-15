@@ -1,2 +1,11 @@
 epa_key <- ""
 pa_key <- ""
+in_file <- "./out/df_all.Rda"
+out_file <- "./out/df_all.Rda"
+
+nwlng <- -85.825195 
+nwlat <- 38.324420 
+selng <- -83.023682
+selat <- 39.825413
+
+location <- "both" # indoor, outdoor, or both for purpleair

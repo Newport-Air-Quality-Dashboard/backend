@@ -254,14 +254,6 @@ transform_pa <- function(df) {
   return(df)
 }
 
-nwlng <- -85.825195 
-nwlat <- 38.324420 
-selng <- -83.023682
-selat <- 39.825413
-
-input_df="./out/df_all.Rda"
-output_df="./out/df_all.Rda"
-location <- "both"
 
 load(input_df)
 
