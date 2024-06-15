@@ -255,7 +255,7 @@ transform_pa <- function(df) {
 }
 
 
-load(input_df)
+load(in_file)
 
 epa_time <- 1
 while (T) {
@@ -292,7 +292,7 @@ while (T) {
   combined_data <- combined_data %>% distinct()
   
   print("saving data")
-  save(combined_data, file=output_df)
+  save(combined_data, file=out_file)
 
   print("data saved. sleeping 10 minutes")
   
