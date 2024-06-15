@@ -268,7 +268,7 @@ load(input_df)
 epa_time <- 1
 while (T) {
   print("grabbing PurpleAir data")
-  df_pa <- get_pa(-84.534, 39.106, -84.455, 39.050, location, api_key=pa_key)
+  df_pa <- get_pa(nwlng = nwlng, nwlat = nwlat, selng = selng, selat = selat, location, api_key=pa_key)
   print("transforming PurpleAir data")
   df_pa <- transform_pa(df_pa)
   
