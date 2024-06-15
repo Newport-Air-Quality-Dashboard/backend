@@ -144,12 +144,14 @@ get_pa <- function(nwlng, nwlat, selng, selat, location, api_key) {
                    "name", 
                    "latitude", 
                    "longitude", 
-                   "humidity", 
-                   "temperature", 
-                   "pressure", 
-                   "pm1.0", 
-                   "pm2.5_atm", "pm2.5_10minute", 
-                   "pm10.0_atm", "confidence")
+                   "humidity_a", "humidity_b", 
+                   "temperature_a", "temperature_b",
+                   "pressure_a", "pressure_b",
+                   "pm1.0_a", "pm1.0_b",
+                   "pm2.5_atm_a", "pm2.5_atm_b",
+                   "pm2.5_10minute_a", "pm2.5_10minute_b",
+                   "pm10.0_atm_a", "pm10.0_atm_b",
+                   "confidence")
   
   fields_api_url <- paste0("&fields=", paste(fields_list, collapse = "%2C"))
   
@@ -171,6 +173,43 @@ get_pa <- function(nwlng, nwlat, selng, selat, location, api_key) {
   return(df)
 }
 
+transform_pa_historical <- function(df) {
+  # null is how PA signifies missing data
+  df[df == "null"] <- NA
+  
+  df$time_stamp <- as.POSIXct(df$time_stamp, 
+                              format = "%s",
+                              tz = "UTC") 
+  df$sensor_index <- as.character(df$sensor_index)
+  
+  # this prevents errors when trying to join with epa data later
+  df <- df %>% mutate_at(c('latitude', 
+                           'longitude',
+                           'humidity_a', 'humidity_b',
+                           'temperature_a', 'temperature_b',
+                           'pressure_a', 'pressure_b',
+                           'pm1.0_60minute_a', 'pm1.0_60minute_b',
+                           'pm2.5_60minute_a', 'pm2.5_60minute_b',
+                           'pm10.0_60minute_a', 'pm10.0_60minute_b'), as.numeric)  
+  
+  # grabbing _a and _b channels is the same cost as grabbing the averaged so this
+  # gives us more data and also a way to test confidence of data.
+  df$humidity <- rowMeans(df[, c('humidity_a', 'humidity_b')])
+  df$temperature <- rowMeans(df[, c('temperature_a', 'temperature_b')])
+  df$pressure <- rowMeans(df[, c('pressure_a', 'pressure_b')])
+  df$pm1.0 <- rowMeans(df[, c('pm1.0_60minute_a', 'pm1.0_60minute_b')])
+  df$pm2.5_60minute <- rowMeans(df[, c('pm2.5_60minute_a', 'pm2.5_60minute_b')])
+  df$pm10.0_60minute <- rowMeans(df[, c('pm10.0_60minute_a', 'pm10.0_60minute_b')])
+  
+  # calculate aqi for pm2.5 and pm10.0
+  df$pm2.5_aqi[!is.na(df$pm2.5_60minute) & df$pm2.5_60minute <= 500.4] <- con2aqi("pm25", df$pm2.5_60minute[!is.na(df$pm2.5_60minute) & df$pm2.5_60minute <= 500.4])
+  df$pm10.0_aqi[!is.na(df$pm10.0_60minute) & df$pm10.0_60minute <= 604] <- con2aqi("pm10", df$pm10.0_60minute[!is.na(df$pm10.0_60minute) & df$pm10.0_60minute <= 604])
+  
+  df$source <- "PurpleAir"
+  
+  return(df)
+}
+
 transform_pa <- function(df) {
   
   # last_seen reports the time and data associated with that time
@@ -184,29 +223,27 @@ transform_pa <- function(df) {
                               tz = "UTC") 
   df$sensor_index <- as.character(df$sensor_index)
   
+  # this prevents errors when trying to join with epa data later
   df <- df %>% mutate_at(c('latitude', 
                            'longitude',
-                           'humidity',
-                           'temperature',
-                           'pressure',
-                           'pm1.0',
-                           'pm2.5_10minute',
-                           'pm10.0_atm',
+                           'humidity_a', 'humidity_b',
+                           'temperature_a', 'temperature_b',
+                           'pressure_a', 'pressure_b',
+                           'pm1.0_atm_a', 'pm1.0_atm_b',
+                           'pm2.5_atm_a', 'pm2.5_atm_b',
+                           'pm2.5_10minute_a', 'pm2.5_10minute_b',
+                           'pm10.0_atm_a', 'pm10.0_atm_b',
                            'confidence'), as.numeric)  
   
-  # I've chosen to remove all values that are above these. The EPA says that 
-  # AQI goes from 0 to 500. These values are 500 AQI for their respective 
-  # pollutant. Also con2aqi won't work on values above these so seems like a 
-  # reasonable upper-limit.
-  #
-  # pm2.5  - 500.4
-  # pm10.0 - 604
-  # co     - 50.4
-  # so2    - 1004
-  # no2    - 2049
-  # df["pm2.5_atm"][df["pm2.5_atm"] > 500.4] <- NA
-  # df["pm2.5_10minute"][df["pm2.5_10minute"] > 500.4] <- NA
-  # df["pm10.0_atm"][df["pm10.0_atm"] > 604] <- NA
+  # grabbing _a and _b channels is the same cost as grabbing the averaged so this
+  # gives us more data and also a way to test confidence of data.
+  df$humidity <- rowMeans(df[, c('humidity_a', 'humidity_b')])
+  df$temperature <- rowMeans(df[, c('temperature_a', 'temperature_b')])
+  df$pressure <- rowMeans(df[, c('pressure_a', 'pressure_b')])
+  df$pm1.0 <- rowMeans(df[, c('pm1.0_a', 'pm1.0_b')])
+  df$pm2.5_atm <- rowMeans(df[, c('pm2.5_atm_a', 'pm2.5_atm_b')])
+  df$pm2.5_10minute <- rowMeans(df[, c('pm2.5_10minute_a', 'pm2.5_10minute_b')])
+  df$pm10.0_atm <- rowMeans(df[, c('pm10.0_atm_a', 'pm10.0_atm_b')])
   
   # calculate aqi for pm2.5 and pm10.0
   df$pm2.5_aqi[df$pm2.5_10minute <= 500.4] <- con2aqi("pm25", df$pm2.5_10minute[df$pm2.5_10minute <= 500.4])
@@ -271,22 +308,26 @@ while (T) {
   Sys.sleep(600) # Sleep 10m
 }
 
-  combined_data$pm2.5_aqi[combined_data$pm2.5_60minute <= 500.4 & combined_data$source == "PurpleAir"] <- con2aqi("pm25", combined_data$pm2.5_60minute[combined_data$pm2.5_60minute <= 500.4 & combined_data$source == "PurpleAir"])
-  combined_data$pm10.0_aqi[combined_data$pm10.0_60minute <= 604 & combined_data$source == "PurpleAir"] <- con2aqi("pm10", combined_data$pm10.0_60minute[combined_data$pm10.0_60minute <= 604 & combined_data$source == "PurpleAir"])
-  
-  # calculate aqi for pm2.5 and pm10.0
-  combined_data$pm2.5_aqi <- con2aqi("pm25", combined_data$pm2.5_10minute)
-  combined_data$pm10.0_aqi <- con2aqi("pm10", combined_data$pm10.0_atm)
-  
-  
-  combined_data[is.na(combined_data$pm2.5_60minute), ] <- rowMeans(combined_data[is.na(combined_data$pm2.5_60minute), c("pm2.5_60minute_a", "pm2.5_60minute_b")], na.rm=T)
-  combined_data[is.na(combined_data$pm10.0_60minute), ] <- rowMeans(combined_data[is.na(combined_data$pm10.0_60minute), c("pm10.0_60minute_a", "pm10.0_60minute_b")], na.rm=T)
-  combined_data[is.na(combined_data$pm1.0_60minute), ] <- rowMeans(combined_data[is.na(combined_data$pm1.0_60minute), c("pm1.0_60minute_a", "pm1.0_60minute_b")], na.rm=T)
-  combined_data[is.na(combined_data$temperature), ] <- rowMeans(combined_data[is.na(combined_data$temperature), c("temperature_a", "temperature_b")], na.rm=T)
-  combined_data[is.na(combined_data$humidity), ] <- rowMeans(combined_data[is.na(combined_data$humidity), c("humidity_a", "humidity_b")], na.rm=T)
-  combined_data[is.na(combined_data$pressure), ] <- rowMeans(combined_data[is.na(combined_data$pressure), c("pressure_a", "pressure_b")], na.rm=T)
-  
-  df_all <- combined_data
-  
-  save(df_all, file="out/df_all.Rda")
+  # df_pa <- transform_pa_historical(df_pa)
+  # 
+  # df_epa <- transform_epa(df_epa)
+  # df_new <- df_epa
+  # 
+  # combined_data$pm2.5_aqi[!is.na(combined_data$pm2.5_60minute) & combined_data$pm2.5_60minute <= 500.4 & is.na(combined_data$pm2.5_aqi)] <- con2aqi("pm25", combined_data$pm2.5_60minute[!is.na(combined_data$pm2.5_60minute) & combined_data$pm2.5_60minute <= 500.4 & is.na(combined_data$pm2.5_aqi)])
+  # combined_data$pm10.0_aqi[!is.na(combined_data$pm10.0_60minute) & combined_data$pm10.0_60minute <= 604 & is.na(combined_data$pm10.0_aqi)] <- con2aqi("pm10", combined_data$pm10.0_60minute[!is.na(combined_data$pm10.0_60minute) & combined_data$pm10.0_60minute <= 604 & is.na(combined_data$pm10.0_aqi)])
+  # save(combined_data, file="out/combined_aqis.Rda")
+  # 
+  # load(file="out/combined_aqis.Rda")
+  # 
+  # combined_data$pm2.5_60minute[is.na(combined_data$pm2.5_60minute)] <- rowMeans(combined_data[is.na(combined_data$pm2.5_60minute), c("pm2.5_60minute_a", "pm2.5_60minute_b")])
+  # combined_data$pm10.0_60minute[is.na(combined_data$pm10.0_60minute)] <- rowMeans(combined_data[is.na(combined_data$pm10.0_60minute), c("pm10.0_60minute_a", "pm10.0_60minute_b")])
+  # combined_data$pm1.0_60minute[is.na(combined_data$pm1.0_60minute)] <- rowMeans(combined_data[is.na(combined_data$pm1.0_60minute), c("pm1.0_60minute_a", "pm1.0_60minute_b")])
+  # combined_data$temperature[is.na(combined_data$temperature)] <- rowMeans(combined_data[is.na(combined_data$temperature), c("temperature_a", "temperature_b")])
+  # combined_data$humidity[is.na(combined_data$humidity)] <- rowMeans(combined_data[is.na(combined_data$humidity), c("humidity_a", "humidity_b")])
+  # combined_data$pressure[is.na(combined_data$pressure)] <- rowMeans(combined_data[is.na(combined_data$pressure), c("pressure_a", "pressure_b")])
+  # 
+  # df_all <- combined_data
+  # 
+  # save(df_all, file="out/df_all.Rda")
+  # load(file="out/df_all.Rda")
   
