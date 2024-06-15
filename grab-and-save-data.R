@@ -240,7 +240,7 @@ transform_pa <- function(df) {
   df$humidity <- rowMeans(df[, c('humidity_a', 'humidity_b')])
   df$temperature <- rowMeans(df[, c('temperature_a', 'temperature_b')])
   df$pressure <- rowMeans(df[, c('pressure_a', 'pressure_b')])
-  df$pm1.0 <- rowMeans(df[, c('pm1.0_a', 'pm1.0_b')])
+  df$pm1.0 <- rowMeans(df[, c('pm1.0_atm_a', 'pm1.0_atm_b')])
   df$pm2.5_atm <- rowMeans(df[, c('pm2.5_atm_a', 'pm2.5_atm_b')])
   df$pm2.5_10minute <- rowMeans(df[, c('pm2.5_10minute_a', 'pm2.5_10minute_b')])
   df$pm10.0_atm <- rowMeans(df[, c('pm10.0_atm_a', 'pm10.0_atm_b')])
