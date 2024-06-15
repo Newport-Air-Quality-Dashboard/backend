@@ -240,7 +240,7 @@ transform_pa <- function(df) {
   df$humidity <- rowMeans(df[, c('humidity_a', 'humidity_b')])
   df$temperature <- rowMeans(df[, c('temperature_a', 'temperature_b')])
   df$pressure <- rowMeans(df[, c('pressure_a', 'pressure_b')])
-  df$pm1.0 <- rowMeans(df[, c('pm1.0_a', 'pm1.0_b')])
+  df$pm1.0 <- rowMeans(df[, c('pm1.0_atm_a', 'pm1.0_atm_b')])
   df$pm2.5_atm <- rowMeans(df[, c('pm2.5_atm_a', 'pm2.5_atm_b')])
   df$pm2.5_10minute <- rowMeans(df[, c('pm2.5_10minute_a', 'pm2.5_10minute_b')])
   df$pm10.0_atm <- rowMeans(df[, c('pm10.0_atm_a', 'pm10.0_atm_b')])
@@ -286,13 +286,13 @@ while (T) {
   df_new$type <- "real-time"
   
   print("merging real-time with historical data")
-  combined_data <- bind_rows(combined_data, df_new)
+  df_all <- bind_rows(df_all, df_new)
   
   print("removing duplicate rows")
-  combined_data <- combined_data %>% distinct()
+  df_all <- df_all %>% distinct()
   
   print("saving data")
-  save(combined_data, file=out_file)
+  save(df_all, file=out_file)
 
   print("data saved. sleeping 10 minutes")
   
@@ -305,20 +305,20 @@ while (T) {
   # df_epa <- transform_epa(df_epa)
   # df_new <- df_epa
   # 
-  # combined_data$pm2.5_aqi[!is.na(combined_data$pm2.5_60minute) & combined_data$pm2.5_60minute <= 500.4 & is.na(combined_data$pm2.5_aqi)] <- con2aqi("pm25", combined_data$pm2.5_60minute[!is.na(combined_data$pm2.5_60minute) & combined_data$pm2.5_60minute <= 500.4 & is.na(combined_data$pm2.5_aqi)])
-  # combined_data$pm10.0_aqi[!is.na(combined_data$pm10.0_60minute) & combined_data$pm10.0_60minute <= 604 & is.na(combined_data$pm10.0_aqi)] <- con2aqi("pm10", combined_data$pm10.0_60minute[!is.na(combined_data$pm10.0_60minute) & combined_data$pm10.0_60minute <= 604 & is.na(combined_data$pm10.0_aqi)])
-  # save(combined_data, file="out/combined_aqis.Rda")
+  # df_all$pm2.5_aqi[!is.na(df_all$pm2.5_60minute) & df_all$pm2.5_60minute <= 500.4 & is.na(df_all$pm2.5_aqi)] <- con2aqi("pm25", df_all$pm2.5_60minute[!is.na(df_all$pm2.5_60minute) & df_all$pm2.5_60minute <= 500.4 & is.na(df_all$pm2.5_aqi)])
+  # df_all$pm10.0_aqi[!is.na(df_all$pm10.0_60minute) & df_all$pm10.0_60minute <= 604 & is.na(df_all$pm10.0_aqi)] <- con2aqi("pm10", df_all$pm10.0_60minute[!is.na(df_all$pm10.0_60minute) & df_all$pm10.0_60minute <= 604 & is.na(df_all$pm10.0_aqi)])
+  # save(df_all, file="out/combined_aqis.Rda")
   # 
   # load(file="out/combined_aqis.Rda")
   # 
-  # combined_data$pm2.5_60minute[is.na(combined_data$pm2.5_60minute)] <- rowMeans(combined_data[is.na(combined_data$pm2.5_60minute), c("pm2.5_60minute_a", "pm2.5_60minute_b")])
-  # combined_data$pm10.0_60minute[is.na(combined_data$pm10.0_60minute)] <- rowMeans(combined_data[is.na(combined_data$pm10.0_60minute), c("pm10.0_60minute_a", "pm10.0_60minute_b")])
-  # combined_data$pm1.0_60minute[is.na(combined_data$pm1.0_60minute)] <- rowMeans(combined_data[is.na(combined_data$pm1.0_60minute), c("pm1.0_60minute_a", "pm1.0_60minute_b")])
-  # combined_data$temperature[is.na(combined_data$temperature)] <- rowMeans(combined_data[is.na(combined_data$temperature), c("temperature_a", "temperature_b")])
-  # combined_data$humidity[is.na(combined_data$humidity)] <- rowMeans(combined_data[is.na(combined_data$humidity), c("humidity_a", "humidity_b")])
-  # combined_data$pressure[is.na(combined_data$pressure)] <- rowMeans(combined_data[is.na(combined_data$pressure), c("pressure_a", "pressure_b")])
+  # df_all$pm2.5_60minute[is.na(df_all$pm2.5_60minute)] <- rowMeans(df_all[is.na(df_all$pm2.5_60minute), c("pm2.5_60minute_a", "pm2.5_60minute_b")])
+  # df_all$pm10.0_60minute[is.na(df_all$pm10.0_60minute)] <- rowMeans(df_all[is.na(df_all$pm10.0_60minute), c("pm10.0_60minute_a", "pm10.0_60minute_b")])
+  # df_all$pm1.0_60minute[is.na(df_all$pm1.0_60minute)] <- rowMeans(df_all[is.na(df_all$pm1.0_60minute), c("pm1.0_60minute_a", "pm1.0_60minute_b")])
+  # df_all$temperature[is.na(df_all$temperature)] <- rowMeans(df_all[is.na(df_all$temperature), c("temperature_a", "temperature_b")])
+  # df_all$humidity[is.na(df_all$humidity)] <- rowMeans(df_all[is.na(df_all$humidity), c("humidity_a", "humidity_b")])
+  # df_all$pressure[is.na(df_all$pressure)] <- rowMeans(df_all[is.na(df_all$pressure), c("pressure_a", "pressure_b")])
   # 
-  # df_all <- combined_data
+  # df_all <- df_all
   # 
   # save(df_all, file="out/df_all.Rda")
   # load(file="out/df_all.Rda")
