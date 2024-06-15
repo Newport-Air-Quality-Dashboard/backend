@@ -259,8 +259,8 @@ nwlat <- 38.324420
 selng <- -83.023682
 selat <- 39.825413
 
-input_df="./out/combined_complete.Rda"
-output_df="./out/combined_realtime.Rda"
+input_df="./out/df_all.Rda"
+output_df="./out/df_all.Rda"
 location <- "both"
 
 load(input_df)
@@ -268,7 +268,7 @@ load(input_df)
 epa_time <- 1
 while (T) {
   print("grabbing PurpleAir data")
-  df_pa <- get_pa(nwlng = nwlng, nwlat = nwlat, selng = selng, selat = selat, location, api_key=pa_key)
+  df_pa <- get_pa(-84.534, 39.106, -84.455, 39.050, location, api_key=pa_key)
   print("transforming PurpleAir data")
   df_pa <- transform_pa(df_pa)
   
