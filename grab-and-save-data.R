@@ -138,7 +138,6 @@ get_pa <- function(nwlng, nwlat, selng, selat, location, api_key) {
   lat_lon <- c(nwlng, nwlat, selng, selat)
   ll_api_url <- paste0("&nwlng=", lat_lon[1], "&nwlat=", lat_lon[2], "&selng=", lat_lon[3], "&selat=", lat_lon[4])
   
-  # Fields to get
   fields_list <- c("sensor_index", 
                    "last_seen", 
                    "name", 
@@ -147,10 +146,7 @@ get_pa <- function(nwlng, nwlat, selng, selat, location, api_key) {
                    "humidity_a", "humidity_b", 
                    "temperature_a", "temperature_b",
                    "pressure_a", "pressure_b",
-                   "pm1.0_atm_a", "pm1.0_atm_b",
-                   "pm2.5_atm_a", "pm2.5_atm_b",
-                   "pm2.5_10minute_a", "pm2.5_10minute_b",
-                   "pm10.0_atm_a", "pm10.0_atm_b",
+                   "pm2.5_cf_1_a", "pm2.5_cf_1_b",
                    "confidence")
   
   fields_api_url <- paste0("&fields=", paste(fields_list, collapse = "%2C"))
