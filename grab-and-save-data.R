@@ -1,7 +1,13 @@
 #!/usr/bin/env Rscript
 
 # Install packages that aren't installed
-my_packages <- c("con2aqi", "httr", "jsonlite", "tidyverse", "DBI", "RSQLite")
+my_packages <- c("con2aqi", 
+                 "httr", 
+                 "jsonlite", 
+                 "tidyverse",
+                 "DBI",
+                 "RSQLite")
+
 not_installed <- my_packages[!(my_packages %in% installed.packages()[ , "Package"])]    # Extract not installed packages
 if(length(not_installed)) install.packages(not_installed)    
 
@@ -275,6 +281,20 @@ transform_pa <- function(df) {
   
   return(df)
 }
+
+
+
+##     _    ___  __  __          _      ##
+##    / \  / _ \|  \/  | ___ ___| |__   ##
+##   / _ \| | | | |\/| |/ _ / __| '_ \  ##
+##  / ___ | |_| | |  | |  __\__ | | | | ## 
+## /_/   \_\__\_|_|  |_|\___|___|_| |_| ## 
+##                                      ##
+
+transform_aqmesh <- function(df) {
+  
+}
+
 
 
 load(input_df)
