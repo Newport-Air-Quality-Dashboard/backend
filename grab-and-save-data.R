@@ -1,14 +1,23 @@
 #!/usr/bin/env Rscript
-# install.packages(c("httr", "jsonlite", "tidyverse"))
+
+# Install packages that aren't installed
+my_packages <- c("con2aqi", "httr", "jsonlite", "tidyverse", "DBI", "RSQLite")
+not_installed <- my_packages[!(my_packages %in% installed.packages()[ , "Package"])]    # Extract not installed packages
+if(length(not_installed)) install.packages(not_installed)    
 
 library(con2aqi)
 library(httr)
 library(jsonlite)
 library(tidyverse)
 
+library(DBI)
+
 # I decided it was a bad idea to have api keys in a repo so i've used "config.R"
 # to store sensitive data. just copy the config.R.example to config.R.
 source("config.R")
+
+# opens sqlite database specified in config.R
+con <- dbConnect(RSQLite::SQLite(), path_to_db)
 
 # Function to pull data from the EPA's AirNow EPA. Requires an AirNow account
 # and an API key. 
@@ -21,10 +30,17 @@ get_epa <- function(nwlng, nwlat,  selng, selat,
   # epa allows you to select an area for sensors. this creates that from 2 lats
   # and 2 longs
   bbox <- paste(nwlng, nwlat, selng, selat, sep=",")
+  
+ data_type = "B"
+ monitor_type = "2"
+ verbose = "1"
+ parameters = c("OZONE", "PM25", "PM10", "CO", "NO2", "SO2")
+ include_raw_concentrations = "1"
+ api_key = epa_key
 
   root_url <- "https://www.airnowapi.org/aq/data/?"
 
-  parameter_url <- paste0("format=", "text/csv",
+  parameter_url <- paste0("format=", "application/json",
                          "&BBOX=", bbox, 
                          "&parameters=", paste(parameters, collapse=","),
                          "&dataType=", data_type,
@@ -47,12 +63,8 @@ get_epa <- function(nwlng, nwlat,  selng, selat,
   response <- GET(api_url)
   
   if (status_code(response) == 200) {
-    df <- content(response, as = "parsed")
-    
-    colnames(df) <- c("latitude", "longitude", "time_stamp", "parameter", 
-                          "concentration", "unit", "raw_concentration", "aqi", 
-                          "category", "name", "agency", "aqs_id", "sensor_index")
-    
+    df <- content(response, as = "text") %>%
+      fromJSON()
   } else {
     stop("API request failed")
   }
@@ -76,7 +88,10 @@ transform_epa <- function(df) {
   df <- df %>% pivot_wider(names_from=parameter, values_from=c(concentration, aqi, category, raw_concentration, unit)) 
   
   # vector used to rename the epa fields to match purple air.
-  to_rename <- c(pm2.5_aqi = "aqi_PM2.5",
+  to_rename <- c(latitude = "Latitude",
+                 longitude= "longitude",
+                 time_stamp = "UTC",
+                 pm2.5_aqi = "aqi_PM2.5",
                  no2_aqi = "aqi_NO2",
                  co_aqi = "aqi_CO",
                  ozone_aqi = "aqi_OZONE",
@@ -161,7 +176,7 @@ get_pa <- function(nwlng, nwlat, selng, selat, location, api_key) {
     json_data <- content(response, as = "text") %>%
       fromJSON()
     df <- bind_cols(json_data$data)
-    names(df) <- fields_list
+    names(df) <- json_data$fields
   } else {
     stop("API request failed")
   }
@@ -184,22 +199,14 @@ transform_pa_historical <- function(df) {
                            'humidity_a', 'humidity_b',
                            'temperature_a', 'temperature_b',
                            'pressure_a', 'pressure_b',
-                           'pm1.0_60minute_a', 'pm1.0_60minute_b',
-                           'pm2.5_60minute_a', 'pm2.5_60minute_b',
-                           'pm10.0_60minute_a', 'pm10.0_60minute_b'), as.numeric)  
+                           'pm2.5_60minute_cf_1_a', 'pm2.5_60minute_cf_1_b'), as.numeric)  
   
   # grabbing _a and _b channels is the same cost as grabbing the averaged so this
   # gives us more data and also a way to test confidence of data.
   df$humidity <- rowMeans(df[, c('humidity_a', 'humidity_b')])
   df$temperature <- rowMeans(df[, c('temperature_a', 'temperature_b')])
   df$pressure <- rowMeans(df[, c('pressure_a', 'pressure_b')])
-  df$pm1.0 <- rowMeans(df[, c('pm1.0_60minute_a', 'pm1.0_60minute_b')])
-  df$pm2.5_60minute <- rowMeans(df[, c('pm2.5_60minute_a', 'pm2.5_60minute_b')])
-  df$pm10.0_60minute <- rowMeans(df[, c('pm10.0_60minute_a', 'pm10.0_60minute_b')])
-  
-  # calculate aqi for pm2.5 and pm10.0
-  df$pm2.5_aqi[!is.na(df$pm2.5_60minute) & df$pm2.5_60minute <= 500.4] <- con2aqi("pm25", df$pm2.5_60minute[!is.na(df$pm2.5_60minute) & df$pm2.5_60minute <= 500.4])
-  df$pm10.0_aqi[!is.na(df$pm10.0_60minute) & df$pm10.0_60minute <= 604] <- con2aqi("pm10", df$pm10.0_60minute[!is.na(df$pm10.0_60minute) & df$pm10.0_60minute <= 604])
+  df$pm2.5_cf_1_60minute <- rowMeans(df[, c('pm2.5_cf_1_60minute_a', 'pm2.5_cf_1_60minute_b')])
   
   df$source <- "PurpleAir"
   
@@ -225,25 +232,20 @@ transform_pa <- function(df) {
                            'humidity_a', 'humidity_b',
                            'temperature_a', 'temperature_b',
                            'pressure_a', 'pressure_b',
-                           'pm1.0_atm_a', 'pm1.0_atm_b',
-                           'pm2.5_atm_a', 'pm2.5_atm_b',
-                           'pm2.5_10minute_a', 'pm2.5_10minute_b',
-                           'pm10.0_atm_a', 'pm10.0_atm_b',
+                           'pm2.5_cf_1_a', 'pm2.5_cf_1_b',
                            'confidence'), as.numeric)  
   
   # grabbing _a and _b channels is the same cost as grabbing the averaged so this
   # gives us more data and also a way to test confidence of data.
-  df$humidity <- rowMeans(df[, c('humidity_a', 'humidity_b')])
-  df$temperature <- rowMeans(df[, c('temperature_a', 'temperature_b')])
-  df$pressure <- rowMeans(df[, c('pressure_a', 'pressure_b')])
-  df$pm1.0 <- rowMeans(df[, c('pm1.0_atm_a', 'pm1.0_atm_b')])
-  df$pm2.5_atm <- rowMeans(df[, c('pm2.5_atm_a', 'pm2.5_atm_b')])
-  df$pm2.5_10minute <- rowMeans(df[, c('pm2.5_10minute_a', 'pm2.5_10minute_b')])
-  df$pm10.0_atm <- rowMeans(df[, c('pm10.0_atm_a', 'pm10.0_atm_b')])
+  df$humidity <- rowMeans(df[, c('humidity_a', 'humidity_b')], na.rm=T)
+  df$temperature <- rowMeans(df[, c('temperature_a', 'temperature_b')], na.rm=T)
+  df$pressure <- rowMeans(df[, c('pressure_a', 'pressure_b')], na.rm=T)
+  df$pm2.5_cf_1 <- rowMeans(df[, c('pm2.5_cf_1_a', 'pm2.5_cf_1_b')])
   
-  # calculate aqi for pm2.5 and pm10.0
-  df$pm2.5_aqi[df$pm2.5_10minute <= 500.4] <- con2aqi("pm25", df$pm2.5_10minute[df$pm2.5_10minute <= 500.4])
-  df$pm10.0_aqi[df$pm10.0_atm <= 604] <- con2aqi("pm10", df$pm10.0_atm[df$pm10.0_atm <= 604])
+  # corrected PA pm2.5 to get more inline with EPA pm2.5
+  df <- within(df, pm2.5_adjusted <- (-57.32) + 0.41 * pm2.5_cf_1 + (-0.060) * humidity + 0.068 * pressure + 0.047 * temperature)
+  
+  df$pm2.5_aqi[df$pm2.5_adjusted <= 500.4] <- con2aqi("pm25", df$pm2.5_adjusted[df$pm2.5_adjusted <= 500.4])
   
   df$source <- "PurpleAir"
   
@@ -251,18 +253,19 @@ transform_pa <- function(df) {
 }
 
 
-load(in_file)
+load(input_df)
 
 epa_time <- 1
 while (T) {
   print("grabbing PurpleAir data")
-  df_pa <- get_pa(-84.534, 39.106, -84.455, 39.050, location, api_key=pa_key)
+  df_pa <- get_pa(nwlng = pa_nwlng, nwlat = pa_nwlat, selng = pa_selng, selat = pa_selat,
+                  location, api_key=pa_key)
   print("transforming PurpleAir data")
   df_pa <- transform_pa(df_pa)
   
   if (epa_time %% 6 == 0) {
     print("grabbing EPA data")
-    df_epa <- get_epa(nwlng = nwlng, nwlat = nwlat, selng = selng, selat = selat,
+    df_epa <- get_epa(nwlng = epa_nwlng, nwlat = epa_nwlat, selng = epa_selng, selat = epa_selat,
                              api_key = epa_key)
     print("transforming EPA data")
     df_epa <- transform_epa(df_epa) 
@@ -273,7 +276,8 @@ while (T) {
                                                              'latitude', 
                                                              'longitude', 
                                                              'name', 
-                                                             'source'))
+                                                             'source',
+                                                             'pm2.5_aqi'))
     epa_time <- 1
   } else {
     df_new <- df_pa
@@ -281,14 +285,16 @@ while (T) {
   
   df_new$type <- "real-time"
   
-  print("merging real-time with historical data")
-  df_all <- bind_rows(df_all, df_new)
+  dbAppendTable(con, "df_all", path_to_db)
   
-  print("removing duplicate rows")
-  df_all <- df_all %>% distinct()
-  
-  print("saving data")
-  save(df_all, file=out_file)
+  # print("merging real-time with historical data")
+  # df_all <- bind_rows(df_all, df_new)
+  # 
+  # print("removing duplicate rows")
+  # df_all <- df_all %>% distinct()
+  # 
+  # print("saving data")
+  # save(df_all, file=out_file)
 
   print("data saved. sleeping 10 minutes")
   
@@ -316,6 +322,28 @@ while (T) {
   # 
   # df_all <- df_all
   # 
-  # save(df_all, file="out/df_all.Rda")
+  save(df_all, file="out/df_all.Rda")
   # load(file="out/df_all.Rda")
+  
+  # df_all$humidity <- rowMeans(df_all[, c('humidity_a', 'humidity_b')], na.rm=T)
+  # df_all$temperature <- rowMeans(df_all[, c('temperature_a', 'temperature_b')], na.rm=T)
+  # df_all$pressure <- rowMeans(df_all[, c('pressure_a', 'pressure_b')], na.rm=T)
+  # 
+  # df_all$pm2.5_aqi[is.na(df_all$pm2.5_aqi) & !is.na(df_all$pm2.5_aqi.x)] <- df_all$pm2.5_aqi.x[is.na(df_all$pm2.5_aqi) & !is.na(df_all$pm2.5_aqi.x)]
+  # df_all$pm2.5_atm[is.na(df_all$pm2.5_atm) & !is.na(df_all$pm2.5_atm.x)] <- df_all$pm2.5_atm.x[is.na(df_all$pm2.5_atm) & !is.na(df_all$pm2.5_atm.x)]
+  # df_all$pm2.5_aqi[is.na(df_all$pm10.0_aqi) & !is.na(df_all$pm10.0_aqi.x)] <- df_all$pm10.0_aqi.x[is.na(df_all$pm10.0_aqi) & !is.na(df_all$pm10.0_aqi.x)]
+  # df_all$pm2.5_atm[is.na(df_all$pm10.0_atm) & !is.na(df_all$pm10.0_atm.x)] <- df_all$pm10.0_atm.x[is.na(df_all$pm10.0_atm) & !is.na(df_all$pm10.0_atm.x)]
+  # 
+  # df_all$pm2.5_aqi[is.na(df_all$pm2.5_aqi) & !is.na(df_all$pm2.5_aqi.y)] <- df_all$pm2.5_aqi.y[is.na(df_all$pm2.5_aqi) & !is.na(df_all$pm2.5_aqi.y)]
+  # df_all$pm2.5_atm[is.na(df_all$pm2.5_atm) & !is.na(df_all$pm2.5_atm.y)] <- df_all$pm2.5_atm.y[is.na(df_all$pm2.5_atm) & !is.na(df_all$pm2.5_atm.y)]
+  # df_all$pm2.5_aqi[is.na(df_all$pm10.0_aqi) & !is.na(df_all$pm10.0_aqi.y)] <- df_all$pm10.0_aqi.y[is.na(df_all$pm10.0_aqi) & !is.na(df_all$pm10.0_aqi.y)]
+  # df_all$pm2.5_atm[is.na(df_all$pm10.0_atm) & !is.na(df_all$pm10.0_atm.y)] <- df_all$pm10.0_atm.y[is.na(df_all$pm10.0_atm) & !is.na(df_all$pm10.0_atm.y)]
+  # 
+  # df_all$pm2.5_aqi.x <- NULL
+  # df_all$pm2.5_atm.x <- NULL
+  # df_all$pm10.0_aqi.x <- NULL
+  # df_all$pm10.0_atm.x <- NULL
+  # 
+  df_all[df_all$source == "PurpleAir",] <- within(df_all[df_all$source == "PurpleAir",], pm2.5_aqi <- (-57.32) + 0.41 * pm2.5_cf_1_60minute + (-0.060) * humidity + 0.068 * pressure + 0.047 * temperature)
+  
   

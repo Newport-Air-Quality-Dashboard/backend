@@ -1,11 +1,23 @@
-epa_key <- ""
-pa_key <- ""
-in_file <- "./out/df_all.Rda"
-out_file <- "./out/df_all.Rda"
+path_to_db <- ""
 
-nwlng <- -85.825195 
-nwlat <- 38.324420 
-selng <- -83.023682
-selat <- 39.825413
+# For EPA
+epa_key <- "" # register here: https://docs.airnowapi.org/account/request/
 
-location <- "both" # indoor, outdoor, or both for purpleair
+# creates a bounding box to pull sensor data from. can look at it here: http://bboxfinder.com.
+# If you create too large of an area or grab too much data, the EPA will send an error.
+epa_nwlng <- -85.825195 
+epa_nwlat <- 38.324420 
+epa_selng <- -83.023682
+epa_selat <- 39.825413
+
+# For PurpleAir
+pa_key <- "" # register with google account here: https://develop.purpleair.com
+
+# creates a bounding box to pull sensor data from. can look at it here: http://bboxfinder.com.
+# If you create too large of an area or grab too much data, PurpleAir won't send data.
+pa_nwlng <- -84.534 
+pa_nwlat <- 39.106 
+pa_selng <- -84.455
+pa_selat <- 39.050
+
+location <- "both" # indoor, outdoor, or both for purpleair monitors
