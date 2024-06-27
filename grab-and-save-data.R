@@ -19,8 +19,19 @@ source("config.R")
 # opens sqlite database specified in config.R
 con <- dbConnect(RSQLite::SQLite(), path_to_db)
 
+
+
+##  _____ ____   _     ##
+## | ____|  _ \ / \    ##
+## |  _| | |_) / _ \   ##
+## | |___|  __/ ___ \  ##
+## |_____|_| /_/   \_\ ##
+##                     ##
+
+
+
 # Function to pull data from the EPA's AirNow EPA. Requires an AirNow account
-# and an API key. 
+# and an API key.
 get_epa <- function(nwlng, nwlat,  selng, selat,
                     data_type = "B", monitor_type = "2", verbose = "1",
                     parameters = c("OZONE", "PM25", "PM10", "CO", "NO2", "SO2"),
@@ -145,6 +156,16 @@ transform_epa <- function(df) {
   
   return(df)
 }
+
+
+
+##  ____                   _         _    _       ##
+## |  _ \ _   _ _ __ _ __ | | ___   / \  (_)_ __  ##
+## | |_) | | | | '__| '_ \| |/ _ \ / _ \ | | '__| ##
+## |  __/| |_| | |  | |_) | |  __// ___ \| | |    ##
+## |_|    \__,_|_|  | .__/|_|\___/_/   \_|_|_|    ##
+##                  |_|                           ##
+
 
 
 # grabs pa data from the purpleair api. requires an api key with points.
@@ -347,6 +368,6 @@ while (T) {
   # df_all$pm10.0_aqi.x <- NULL
   # df_all$pm10.0_atm.x <- NULL
   # 
-  df_all[df_all$source == "PurpleAir",] <- within(df_all[df_all$source == "PurpleAir",], pm2.5_aqi <- (-57.32) + 0.41 * pm2.5_cf_1_60minute + (-0.060) * humidity + 0.068 * pressure + 0.047 * temperature)
+  # df_all[df_all$source == "PurpleAir",] <- within(df_all[df_all$source == "PurpleAir",], pm2.5_aqi <- (-57.32) + 0.41 * pm2.5_cf_1_60minute + (-0.060) * humidity + 0.068 * pressure + 0.047 * temperature)
   
   
