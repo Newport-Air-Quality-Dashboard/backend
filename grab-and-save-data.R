@@ -75,9 +75,9 @@ get_epa <- function(nwlng, nwlat,  selng, selat,
 # be synonymous with PurpleAir's data. 
 transform_epa <- function(df) {
   
-  # aqs_id is redundant. there's another field called "full aqs id" that
-  # contains the aqs_id and also the country code
-  df$aqs_id <- NULL 
+  # FullAQSCode is redundant. there's another field called IntlAQSCode that
+  # contains the FullAQSCode and also the country code.
+  df$FullAQSCode <- NULL 
   
   # epa uses -999 to signify empty values. I've also seen -999.0 so replace
   # both to be safe.
@@ -85,42 +85,45 @@ transform_epa <- function(df) {
   df[df == -999.0] <- NA
     
   # converts the epa data from long to wide form.
-  df <- df %>% pivot_wider(names_from=parameter, values_from=c(concentration, aqi, category, raw_concentration, unit)) 
+  df <- df %>% pivot_wider(names_from=Parameter, values_from=c(Value, AQI, Category, RawConcentration, Unit)) 
   
   # vector used to rename the epa fields to match purple air.
   to_rename <- c(latitude = "Latitude",
-                 longitude= "longitude",
+                 longitude= "Longitude",
+                 sensor_index = "IntlAQSCode",
                  time_stamp = "UTC",
-                 pm2.5_aqi = "aqi_PM2.5",
-                 no2_aqi = "aqi_NO2",
-                 co_aqi = "aqi_CO",
-                 ozone_aqi = "aqi_OZONE",
-                 pm10.0_aqi = "aqi_PM10",
-                 so2_aqi = "aqi_SO2",
-                 pm2.5_category = "category_PM2.5", 
-                 no2_category = "category_NO2",
-                 co_category = "category_CO",
-                 ozone_category = "category_OZONE",
-                 pm10.0_category = "category_PM10",
-                 so2_category = "category_SO2",
-                 pm2.5_unit = "unit_PM2.5", 
-                 no2_unit = "unit_NO2",
-                 co_unit = "unit_CO",
-                 ozone_unit = "unit_OZONE",
-                 pm10.0_unit = "unit_PM10",
-                 so2_unit = "unit_SO2",
-                 pm2.5_60minute = "concentration_PM2.5", 
-                 no2_60minute = "concentration_NO2",
-                 co_60minute = "concentration_CO",
-                 ozone_60minute = "concentration_OZONE",
-                 pm10.0_60minute = "concentration_PM10",
-                 so2_60minute = "concentration_SO2",
-                 pm2.5_atm = "raw_concentration_PM2.5", 
-                 no2_atm = "raw_concentration_NO2",
-                 co_atm = "raw_concentration_CO",
-                 ozone_atm = "raw_concentration_OZONE",
-                 pm10.0_atm = "raw_concentration_PM10",
-                 so2_atm = "raw_concentration_SO2")
+                 name = "SiteName",
+                 agency = "AgencyName",
+                 pm2.5_aqi = "AQI_PM2.5",
+                 no2_aqi = "AQI_NO2",
+                 co_aqi = "AQI_CO",
+                 ozone_aqi = "AQI_OZONE",
+                 pm10.0_aqi = "AQI_PM10",
+                 so2_aqi = "AQI_SO2",
+                 pm2.5_category = "Category_PM2.5", 
+                 no2_category = "Category_NO2",
+                 co_category = "Category_CO",
+                 ozone_category = "Category_OZONE",
+                 pm10.0_category = "Category_PM10",
+                 so2_category = "Category_SO2",
+                 pm2.5_unit = "Unit_PM2.5", 
+                 no2_unit = "Unit_NO2",
+                 co_unit = "Unit_CO",
+                 ozone_unit = "Unit_OZONE",
+                 pm10.0_unit = "Unit_PM10",
+                 so2_unit = "Unit_SO2",
+                 pm2.5_60minute = "Value_PM2.5", 
+                 no2_60minute = "Value_NO2",
+                 co_60minute = "Value_CO",
+                 ozone_60minute = "Value_OZONE",
+                 pm10.0_60minute = "Value_PM10",
+                 so2_60minute = "Value_SO2",
+                 pm2.5_atm = "RawConcentration_PM2.5", 
+                 no2_atm = "RawConcentration_NO2",
+                 co_atm = "RawConcentration_CO",
+                 ozone_atm = "RawConcentration_OZONE",
+                 pm10.0_atm = "RawConcentration_PM10",
+                 so2_atm = "RawConcentration_SO2")
   
   # originally, i had issues with the program erroring and crashing if a field
   # was absent that was trying to be renamed. using any_of and a character
