@@ -27,7 +27,7 @@ con <- dbConnect(RSQLite::SQLite(), path_to_db)
 
 # by default, if database is busy sqlite will just error instead of trying to wait to write to it
 # this tells the database to wait 60 seconds.
-sqliteSetBusyHandler(con, 60000)
+RSQLite::sqliteSetBusyHandler(con, 60000)
 
 
 
@@ -321,7 +321,10 @@ transform_pa <- function(df, useAdjusted) {
 ##                                      ##
 
 import_aqmesh <- function(path) {
-  
+  df <- list.files(path = path,  # Identify all CSV files
+                   pattern = "*.csv", full.names = TRUE) %>% 
+    lapply(read_csv, na = c("", "NA"), comment = ",,,,,") %>% 
+    bind_rows     
 }
 
 transform_aqmesh <- function(df) {
@@ -329,6 +332,7 @@ transform_aqmesh <- function(df) {
   # vector used to rename fields.
   to_rename <- c(latitude = "Latitude",
                  longitude = "Longitude",
+                 time_stamp = "Timestamp",
                  name = "Session_Name",
                  temperature = "1:Measurement_Value",
                  pm1.0 = "2:Measurement_Value",
@@ -342,12 +346,18 @@ transform_aqmesh <- function(df) {
   
   df$source <- "AQMesh"
   
+  df$pm2.5_dashboard <- df$pm2.5
+  df$pm1.0_dashboard <- df$pm1.0
+  df$pm10.0_dashboard <- df$pm10.0
+  df$temperature_dashboard <- df$temperature
+  df$humidity_dashboard <- df$humidity
+  
   return(df)
 }
 
 
 
-load(input_df)
+#load(input_df)
 
 epa_time <- 1
 while (T) {
@@ -365,18 +375,16 @@ while (T) {
     df_epa <- transform_epa(df_epa) 
     
     print("joining PurpleAir and EPA data")
-    df_new <- list(df_pa, df_epa) %>% reduce(full_join, by=c('sensor_index', 
-                                                             'time_stamp', 
-                                                             'latitude', 
-                                                             'longitude', 
-                                                             'name', 
-                                                             'source'))
+    df_new <- merge(df_pa, df_epa, all=T)
+    
     epa_time <- 1
   } else {
     df_new <- df_pa
   }
   
   df_new$type <- "real-time"
+  
+  read_csv()
   
   dbWriteTable(con, "df_all", path_to_db, append=T)
   
@@ -395,6 +403,13 @@ while (T) {
   Sys.sleep(600) # Sleep 10m
 }
 
+  df_aqmesh <- import_aqmesh(path="AQMesh/04-April/")
+  df_aqmesh <- transform_aqmesh(df_aqmesh)
+  
+  df_all <- bind_rows(df_all, df_aqmesh)
+  
+  dbWriteTable(con, "df_all", df_all, overwrite=T)
+  
   # df_pa <- transform_pa_historical(df_pa)
   # 
   # df_epa <- transform_epa(df_epa)
