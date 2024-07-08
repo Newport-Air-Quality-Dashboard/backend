@@ -1,0 +1,21 @@
+,,,,,Sensor_Package_Name,Sensor_Package_Name,Sensor_Package_Name,Sensor_Package_Name,Sensor_Package_Name
+,,,,,AirBeam3:943cc67d981c,AirBeam3:943cc67d981c,AirBeam3:943cc67d981c,AirBeam3:943cc67d981c,AirBeam3:943cc67d981c
+,,,,,Sensor_Name,Sensor_Name,Sensor_Name,Sensor_Name,Sensor_Name
+,,,,,AirBeam3-F,AirBeam3-PM1,AirBeam3-PM10,AirBeam3-PM2.5,AirBeam3-RH
+,,,,,Measurement_Type,Measurement_Type,Measurement_Type,Measurement_Type,Measurement_Type
+,,,,,Temperature,Particulate Matter,Particulate Matter,Particulate Matter,Humidity
+,,,,,Measurement_Units,Measurement_Units,Measurement_Units,Measurement_Units,Measurement_Units
+,,,,,degrees Fahrenheit,micrograms per cubic meter,micrograms per cubic meter,micrograms per cubic meter,percent
+ObjectID,Session_Name,Timestamp,Latitude,Longitude,1:Measurement_Value,2:Measurement_Value,3:Measurement_Value,4:Measurement_Value,5:Measurement_Value
+1,Brh01 Wednesday ,2024-03-20T07:13:45.000,39.172680413,-84.470677505,72.9434,34.24528,57.433964,37.90566,37.056602
+2,Brh01 Wednesday ,2024-03-20T07:14:45.000,39.17267451,-84.470620236,73.683334,33.416668,55.283333,36.75,34.733334
+3,Brh01 Wednesday ,2024-03-20T07:15:45.000,39.17267451,-84.470620236,74.26667,34.583332,58.366665,38.35,33.666668
+4,Brh01 Wednesday ,2024-03-20T07:16:45.000,39.17267451,-84.470620236,75.0,33.55,55.75,37.1,33.0
+5,Brh01 Wednesday ,2024-03-20T07:17:45.000,39.17267451,-84.470620236,75.38333,34.366665,57.783333,38.016666,32.833332
+6,Brh01 Wednesday ,2024-03-20T07:18:45.000,39.172586362,-84.470602802,76.0,29.25,45.05,31.816668,33.35
+7,Brh01 Wednesday ,2024-03-20T07:19:45.000,39.172586362,-84.470602802,76.11667,25.433332,36.666668,27.55,32.566666
+8,Brh01 Wednesday ,2024-03-20T07:20:45.000,39.172586362,-84.470602802,77.0,29.9,46.633335,32.616665,32.433334
+9,Brh01 Wednesday ,2024-03-20T07:21:45.000,39.172586362,-84.470602802,77.0,28.566668,43.35,30.916666,31.733334
+10,Brh01 Wednesday ,2024-03-20T07:22:45.000,39.172586362,-84.470602802,77.416664,28.983334,44.333332,31.4,31.883333
+11,Brh01 Wednesday ,2024-03-20T07:23:45.000,39.172579282,-84.470621952,78.0,28.75,43.866665,31.15,31.6
+12,Brh01 Wednesday ,2024-03-20T07:24:45.000,39.172579282,-84.470621952,78.0,28.983334,44.566666,31.516666,31.166666

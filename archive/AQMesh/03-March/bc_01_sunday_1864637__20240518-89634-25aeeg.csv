@@ -1,0 +1,15 @@
+,,,,,Sensor_Package_Name,Sensor_Package_Name,Sensor_Package_Name,Sensor_Package_Name,Sensor_Package_Name
+,,,,,AirBeam3:409151114900,AirBeam3:409151114900,AirBeam3:409151114900,AirBeam3:409151114900,AirBeam3:409151114900
+,,,,,Sensor_Name,Sensor_Name,Sensor_Name,Sensor_Name,Sensor_Name
+,,,,,AirBeam3-F,AirBeam3-PM1,AirBeam3-PM10,AirBeam3-PM2.5,AirBeam3-RH
+,,,,,Measurement_Type,Measurement_Type,Measurement_Type,Measurement_Type,Measurement_Type
+,,,,,Temperature,Particulate Matter,Particulate Matter,Particulate Matter,Humidity
+,,,,,Measurement_Units,Measurement_Units,Measurement_Units,Measurement_Units,Measurement_Units
+,,,,,degrees Fahrenheit,micrograms per cubic meter,micrograms per cubic meter,micrograms per cubic meter,percent
+ObjectID,Session_Name,Timestamp,Latitude,Longitude,1:Measurement_Value,2:Measurement_Value,3:Measurement_Value,4:Measurement_Value,5:Measurement_Value
+1,BC 01 sunday,2024-03-04T18:12:47.000,39.109283893,-84.563828536,84.0,1.537037,1.537037,1.537037,40.0
+2,BC 01 sunday,2024-03-04T18:13:47.000,39.109302636,-84.563706626,84.0,1.6833333,1.75,1.6833333,40.0
+3,BC 01 sunday,2024-03-04T18:14:47.000,39.109325687,-84.563822607,84.0,1.3166667,1.3166667,1.3166667,40.0
+4,BC 01 sunday,2024-03-04T18:15:47.000,39.109376217,-84.563751586,84.0,1.3333334,1.3333334,1.3333334,39.133335
+5,BC 01 sunday,2024-03-04T18:16:47.000,39.109319116,-84.563773316,84.0,0.9,0.9,0.9,39.0
+6,BC 01 sunday,2024-03-04T18:17:47.000,39.109312523,-84.563698724,84.6,1.1166667,1.1166667,1.1166667,39.0
