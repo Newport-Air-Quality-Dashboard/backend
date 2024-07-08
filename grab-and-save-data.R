@@ -374,11 +374,7 @@ while (T) {
   
   df_new$type <- "real-time"
   
-  if(dbExistsTable(con, "df_all")) {
-    dbAppendTable(con, "df_all", path_to_db)
-  } else {
-    dbWriteTable(con, "df_all", path_to_db)
-  }
+  dbWriteTable(con, "df_all", path_to_db, append=T)
   
   # print("merging real-time with historical data")
   # df_all <- bind_rows(df_all, df_new)
