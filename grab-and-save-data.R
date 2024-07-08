@@ -88,6 +88,15 @@ get_epa <- function(nwlng, nwlat,  selng, selat,
   return (df)
 }
 
+get_epa_csv_files <- function(path, pattern) {
+
+  df <- list.files(path=path, pattern=pattern) %>% 
+        lapply(read_csv) %>% 
+        bind_rows 
+  
+  return (df)
+}
+
 # Transforms the EPA data from long to wide format and renames the columns to 
 # be synonymous with PurpleAir's data. 
 transform_epa <- function(df) {
@@ -135,12 +144,12 @@ transform_epa <- function(df) {
                  ozone_60minute = "Value_OZONE",
                  pm10.0_60minute = "Value_PM10",
                  so2_60minute = "Value_SO2",
-                 pm2.5_atm = "RawConcentration_PM2.5", 
-                 no2_atm = "RawConcentration_NO2",
-                 co_atm = "RawConcentration_CO",
-                 ozone_atm = "RawConcentration_OZONE",
-                 pm10.0_atm = "RawConcentration_PM10",
-                 so2_atm = "RawConcentration_SO2")
+                 pm2.5_raw = "RawConcentration_PM2.5", 
+                 no2_raw = "RawConcentration_NO2",
+                 co_raw = "RawConcentration_CO",
+                 ozone_raw = "RawConcentration_OZONE",
+                 pm10.0_raw = "RawConcentration_PM10",
+                 so2_raw = "RawConcentration_SO2")
   
   # originally, i had issues with the program erroring and crashing if a field
   # was absent that was trying to be renamed. using any_of and a character
@@ -157,6 +166,9 @@ transform_epa <- function(df) {
   
   # probably doesn't matter, but makes sure the sensor_index displays as it should
   df$sensor_index <- as.character(df$sensor_index)
+  
+  df$pm2.5_dashboard <- df$pm2.5_60minute
+  df$pm2.5_aqi_dashboard <- df$pm2.5_aqi
   
   df$source <- "EPA"
   
@@ -243,7 +255,7 @@ transform_pa_historical <- function(df) {
   return(df)
 }
 
-transform_pa <- function(df) {
+transform_pa <- function(df, useAdjusted) {
   
   # last_seen reports the time and data associated with that time
   df <- df %>% rename(any_of(c(time_stamp = "last_seen")))
@@ -273,9 +285,22 @@ transform_pa <- function(df) {
   df$pm2.5_cf_1 <- rowMeans(df[, c('pm2.5_cf_1_a', 'pm2.5_cf_1_b')])
   
   # corrected PA pm2.5 to get more inline with EPA pm2.5
-  df <- within(df, pm2.5_adjusted <- (-57.32) + 0.41 * pm2.5_cf_1 + (-0.060) * humidity + 0.068 * pressure + 0.047 * temperature)
+  df <- within(df, pm2.5_adjusted <- (-58.20) + (0.41 * pm2.5_cf_1) + (-0.061 * humidity) + (0.069 * pressure) + (0.048 * temperature))
+  df$pm2.5_adjusted_aqi[df$pm2.5_adjusted <= 500.4] <- con2aqi("pm25", df$pm2.5_adjusted[df$pm2.5_adjusted <= 500.4])
   
-  df$pm2.5_aqi[df$pm2.5_adjusted <= 500.4] <- con2aqi("pm25", df$pm2.5_adjusted[df$pm2.5_adjusted <= 500.4])
+  df$pm2.5_cf_1_aqi[df$pm2.5_cf_1 <= 500.4] <- con2aqi("pm25", df$pm2.5_cf_1[df$pm2.5_cf_1 <= 500.4])
+  
+  
+  df$pm2.5_a_dashboard <- df$pm2.5_cf_1_a
+  df$pm2.5_b_dashboard <- df$pm2.5_cf_1_b
+  
+  if (useAdjusted) {
+    df$pm2.5_dashboard <- df$pm2.5_adjusted
+    df$pm2.5_aqi_dashboard <- df$pm2.5_adjusted_aqi
+  } else {
+    df$pm2.5_dashboard <- df$pm2.5_cf_1
+    df$pm2.5_aqi_dashboard <- df$pm2.5_adjusted_aqi
+  }
   
   df$source <- "PurpleAir"
   
@@ -291,8 +316,29 @@ transform_pa <- function(df) {
 ## /_/   \_\__\_|_|  |_|\___|___|_| |_| ## 
 ##                                      ##
 
+import_aqmesh <- function(path) {
+  
+}
+
 transform_aqmesh <- function(df) {
   
+  # vector used to rename fields.
+  to_rename <- c(latitude = "Latitude",
+                 longitude = "Longitude",
+                 name = "Session_Name",
+                 temperature = "1:Measurement_Value",
+                 pm1.0 = "2:Measurement_Value",
+                 pm10.0 = "3:Measurement_Value",
+                 pm2.5 = "4:Measurement_Value",
+                 humidity = "5:Measurement_Value")
+  
+  df <- df %>% rename(any_of(to_rename))
+  
+  df$ObjectID <- NULL
+  
+  df$source <- "AQMesh"
+  
+  return(df)
 }
 
 
@@ -305,7 +351,7 @@ while (T) {
   df_pa <- get_pa(nwlng = pa_nwlng, nwlat = pa_nwlat, selng = pa_selng, selat = pa_selat,
                   location, api_key=pa_key)
   print("transforming PurpleAir data")
-  df_pa <- transform_pa(df_pa)
+  df_pa <- transform_pa(df_pa, useAdjusted)
   
   if (epa_time %% 6 == 0) {
     print("grabbing EPA data")
@@ -320,8 +366,7 @@ while (T) {
                                                              'latitude', 
                                                              'longitude', 
                                                              'name', 
-                                                             'source',
-                                                             'pm2.5_aqi'))
+                                                             'source'))
     epa_time <- 1
   } else {
     df_new <- df_pa
@@ -329,7 +374,11 @@ while (T) {
   
   df_new$type <- "real-time"
   
-  dbAppendTable(con, "df_all", path_to_db)
+  if(dbExistsTable(con, "df_all")) {
+    dbAppendTable(con, "df_all", path_to_db)
+  } else {
+    dbWriteTable(con, "df_all", path_to_db)
+  }
   
   # print("merging real-time with historical data")
   # df_all <- bind_rows(df_all, df_new)
@@ -367,7 +416,7 @@ while (T) {
   # df_all <- df_all
   # 
   save(df_all, file="out/df_all.Rda")
-  # load(file="out/df_all.Rda")
+  load(file="out/df_all.Rda")
   
   # df_all$humidity <- rowMeans(df_all[, c('humidity_a', 'humidity_b')], na.rm=T)
   # df_all$temperature <- rowMeans(df_all[, c('temperature_a', 'temperature_b')], na.rm=T)
@@ -383,11 +432,12 @@ while (T) {
   # df_all$pm2.5_aqi[is.na(df_all$pm10.0_aqi) & !is.na(df_all$pm10.0_aqi.y)] <- df_all$pm10.0_aqi.y[is.na(df_all$pm10.0_aqi) & !is.na(df_all$pm10.0_aqi.y)]
   # df_all$pm2.5_atm[is.na(df_all$pm10.0_atm) & !is.na(df_all$pm10.0_atm.y)] <- df_all$pm10.0_atm.y[is.na(df_all$pm10.0_atm) & !is.na(df_all$pm10.0_atm.y)]
   # 
-  # df_all$pm2.5_aqi.x <- NULL
-  # df_all$pm2.5_atm.x <- NULL
-  # df_all$pm10.0_aqi.x <- NULL
-  # df_all$pm10.0_atm.x <- NULL
-  # 
   # df_all[df_all$source == "PurpleAir",] <- within(df_all[df_all$source == "PurpleAir",], pm2.5_aqi <- (-57.32) + 0.41 * pm2.5_cf_1_60minute + (-0.060) * humidity + 0.068 * pressure + 0.047 * temperature)
   
+  df_all$pm2.5_adjusted <- ""
+  
+  df_all$pm2.5_adjusted <- as.numeric(df_all$pm2.5_adjusted)
+  
+  df_all[df_all$source == "PurpleAir",] <- within(df_all[df_all$source == "PurpleAir",], pm2.5_adjusted <- (-58.20) + (0.41 * pm2.5_cf_1_60minute) + (-0.061 * humidity) + (0.069 * pressure) + (0.048 * temperature))
+  df_all$pm2.5_adjusted_aqi[!is.na(df_all$pm2.5_adjusted) & !is.nan(df_all$pm2.5_adjusted) & df_all$pm2.5_adjusted <= 500.4] <- con2aqi("pm25", df_all$pm2.5_adjusted[!is.na(df_all$pm2.5_adjusted) & !is.nan(df_all$pm2.5_adjusted) & df_all$pm2.5_adjusted <= 500.4])
   
