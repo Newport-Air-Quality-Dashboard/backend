@@ -25,6 +25,10 @@ source("config.R")
 # opens sqlite database specified in config.R
 con <- dbConnect(RSQLite::SQLite(), path_to_db)
 
+# by default, if database is busy sqlite will just error instead of trying to wait to write to it
+# this tells the database to wait 60 seconds.
+sqliteSetBusyHandler(con, 60000)
+
 
 
 ##  _____ ____   _     ##
