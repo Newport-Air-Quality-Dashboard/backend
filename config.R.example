@@ -21,3 +21,5 @@ pa_selng <- -84.455
 pa_selat <- 39.050
 
 location <- "both" # indoor, outdoor, or both for purpleair monitors
+
+useAdjusted <- T # Adjusts the pm2.5 and pm2.5_aqi based on a conversion derived from comparison with local EPA data
