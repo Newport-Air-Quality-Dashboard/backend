@@ -341,37 +341,49 @@ transform_aqmesh <- function(df) {
 
 
 
-
+# If the table in the database has columns that the data being added to it doesn't
+# have then it will error. This query just gives an empty dataframe that has the
+# structure of the database in order row_bind with the data so as to allow it to
+# be written to the database.
 db_cols <- dbFetch(dbSendQuery(con, "SELECT * FROM df_all LIMIT 0"))
 db_cols$time_stamp <- as.POSIXct(db_cols$time_stamp)
 
 epa_time <- 1
 while (T) {
-  print("grabbing PurpleAir data")
-  df_pa <- get_pa(nwlng = pa_nwlng, nwlat = pa_nwlat, selng = pa_selng, selat = pa_selat,
-                  location, api_key=pa_key)
-  print("transforming PurpleAir data")
-  df_pa <- transform_pa(df_pa, useAdjusted)
-  df_pa$type <- "real-time"
-  
-  print("writing PA data to database")
-  df_pa <- bind_rows(df_pa, db_cols)
-  dbWriteTable(con, "df_all", df_pa, append=T)
+    tryCatch({ 
+      print("grabbing PurpleAir data")
+      df_pa <- get_pa(nwlng = pa_nwlng, nwlat = pa_nwlat, selng = pa_selng, selat = pa_selat,
+                      location, api_key=pa_key)
+      print("transforming PurpleAir data")
+      df_pa <- transform_pa(df_pa, useAdjusted)
+      df_pa$type <- "real-time"
+      
+      print("writing PA data to database")
+      df_pa <- bind_rows(df_pa, db_cols)
+      dbWriteTable(con, "df_all", df_pa, append=T)
+    }, error = function(err) {
+      message(paste("ERROR:", err, ". Trying again in 10 minutes."))
+    })
   
   if (epa_time %% 6 == 0) {
-    print("grabbing EPA data")
-    df_epa <- get_epa(nwlng = epa_nwlng, nwlat = epa_nwlat, selng = epa_selng, selat = epa_selat,
-                             api_key = epa_key)
-    print("transforming EPA data")
-    df_epa <- transform_epa(df_epa) 
+    tryCatch({ 
+      print("grabbing EPA data")
+      df_epa <- get_epa(nwlng = epa_nwlng, nwlat = epa_nwlat, selng = epa_selng, selat = epa_selat,
+                               api_key = epa_key)
+      
+      print("transforming EPA data")
+      df_epa <- transform_epa(df_epa) 
+      
+      df_epa$type <- "real-time"
     
-    df_epa$type <- "real-time"
-    
-    print("writing EPA data to database")
-    df_epa <- bind_rows(df_epa, db_cols)
-    dbWriteTable(con, "df_all", df_epa, append=T)
-    
-    epa_time <- 1
+      print("writing EPA data to database")
+      df_epa <- bind_rows(df_epa, db_cols)
+      dbWriteTable(con, "df_all", df_epa, append=T)
+      
+      epa_time <- 1
+    }, error = function(err) {
+      message(paste("ERROR:", err, ". Trying again in 10 minutes."))
+    })
   }
   
   print("data saved. sleeping 10 minutes")
